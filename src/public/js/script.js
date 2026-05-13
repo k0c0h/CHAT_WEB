@@ -5,6 +5,8 @@ const messageInput = document.querySelector("#message");
 const allMessages = document.querySelector("#all-messages");
 const typingIndicator = document.querySelector("#typing-indicator");
 const chatDate = document.querySelector("#chat-date");
+const chatUser = localStorage.getItem("chatUser") || "Usuario";
+const chatAvatar = localStorage.getItem("chatAvatar") || "/img/anonimo.png";
 
 chatDate.textContent = new Date().toLocaleDateString("es-ES", {
   weekday: "long",
@@ -12,6 +14,32 @@ chatDate.textContent = new Date().toLocaleDateString("es-ES", {
   month: "long",
   year: "numeric",
 });
+
+socket.emit("registerUser", {
+  user: chatUser,
+  avatar: chatAvatar,
+});
+
+// render helper
+const appendMessage = ({ user, avatar, message, date }) => {
+  const msg = document.createRange().createContextualFragment(`
+    <div class="message">
+      <div class="image-container">
+        <img src="${avatar || '/img/anonimo.png'}" alt="Avatar de ${user}" />
+      </div>
+      <div class="message-body">
+        <div class="user-info">
+          <span class="username">${user}</span>
+          <span class="time">${date}</span>
+          <p>
+            ${message}
+          </p>
+        </div>
+      </div>
+    </div>
+  `);
+  allMessages.append(msg);
+};
 
 const typingUsers = new Set();
 let typingTimeoutId;
@@ -72,24 +100,12 @@ messageInput.addEventListener("blur", () => {
   socket.emit("stopTyping");
 });
 
-socket.on("message", ({ user, message, date }) => {
-  const msg = document.createRange().createContextualFragment(`
-    <div class="message">
-      <div class="image-container">
-        <img src="/img/248.png" alt="" />
-      </div>
-      <div class="message-body">
-        <div class="user-info">
-          <span class="username">${user}</span>
-          <span class="time">${date}</span>
-          <p>
-            ${message}
-          </p>
-        </div>
-      </div>
-    </div>
-  `);
-  allMessages.append(msg);
+socket.on("message", ({ user, avatar, message, date }) => {
+  appendMessage({ user, avatar, message, date });
+});
+
+socket.on('history', (messages) => {
+  messages.forEach((m) => appendMessage(m));
 });
 
 socket.on("typing", ({ user }) => {

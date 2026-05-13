@@ -3,6 +3,7 @@ const {createServer } = require('http');
 const path = require('path'); //direccion
 const cookieParser = require("cookie-parser");
 const realTimeServer = require('./realTimeServer');
+const db = require('./db');
 
 const app = express(); //creando una aplicacion con express
 const httpServer = createServer(app); //permite hacer peticiones al servidor
@@ -15,8 +16,11 @@ app.use(require("./routes"));
 
 app.use(express.static(path.join(__dirname, "public")));
 
-httpServer.listen(app.get("port"), () => {
-    console.log("La aplicación esta corriendo en el puerto", app.get("port"));
-})//funcion anonima es una funcion sin nombre
+// Connect to DB first, then start server and realtime
+db.connect().then(() => {
+    httpServer.listen(app.get("port"), () => {
+        console.log("La aplicación esta corriendo en el puerto", app.get("port"));
+    });
 
-realTimeServer(httpServer);
+    realTimeServer(httpServer);
+});
