@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const connect = async () => {
-  const uri = process.env.MONGODB_URI || 'mongodb+srv://kachiriboga:chiriboga@cluster0.mstbyy5.mongodb.net/?appName=Cluster0';
+  const uri = process.env.MONGODB_URI;
   try {
     await mongoose.connect(uri, {
       useNewUrlParser: true,
