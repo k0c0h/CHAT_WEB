@@ -17,7 +17,6 @@ app.use(require("./routes"));
 
 app.use(express.static(path.join(__dirname, "public")));
 
-// Connect to DB first, then start server and realtime
 db.connect().then(() => {
     httpServer.listen(app.get("port"), () => {
         console.log("La aplicación esta corriendo en el puerto", app.get("port"));
