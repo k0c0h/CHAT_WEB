@@ -3,7 +3,7 @@ const {createServer } = require('http');
 const path = require('path'); //direccion
 const cookieParser = require("cookie-parser");
 const realTimeServer = require('./realTimeServer');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const db = require('./db');
 
 const app = express(); //creando una aplicacion con express

@@ -12,10 +12,16 @@ module.exports = (httpServer) => {
     return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "Usuario";
   };
 
-  io.on("connection", (socket) => {
+  const buildTimeLabel = () =>
+    new Date().toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+  io.on("connection", (socket) => { 
     const user = getUserFromCookie(socket.request.headers.cookie);
 
-    // send recent history to the connected socket (latest 50 messages)
     Message.find()
       .sort({ createdAt: -1 })
       .limit(50)
@@ -23,7 +29,7 @@ module.exports = (httpServer) => {
         const ordered = messages.reverse();
         socket.emit('history', ordered.map((m) => ({
           user: m.user,
-          avatar: m.avatar,
+          alertType: m.alertType || 'General',
           message: m.message,
           date: m.date || m.createdAt.toLocaleTimeString(),
         })));
@@ -32,36 +38,30 @@ module.exports = (httpServer) => {
         console.error('Error fetching history:', err && err.message);
       });
 
-    socket.on("registerUser", ({ user: registeredUser, avatar }) => {
+    socket.on("registerUser", ({ user: registeredUser }) => {
       socket.data.user = registeredUser || user;
-      socket.data.avatar = avatar || "/img/anonimo.png";
     });
 
-    socket.on("message", (message) => {
+    socket.on("alert", ({ alertType, message }) => {
       const payload = {
         user: socket.data.user || user,
-        avatar: socket.data.avatar || '/img/anonimo.png',
-        message,
-        date: new Date().toLocaleTimeString(),
+        alertType: alertType || 'General',
+        message: (message || '').trim(),
+        date: buildTimeLabel(),
       };
 
-      // persist message
+      if (payload.message === '') {
+        return;
+      }
+
       Message.create({
         user: payload.user,
-        avatar: payload.avatar,
+        alertType: payload.alertType,
         message: payload.message,
         date: payload.date,
       }).catch((err) => console.error('Persist message error:', err && err.message));
 
-      io.emit('message', payload);
-    });
-
-    socket.on("typing", () => {
-      socket.broadcast.emit("typing", { user: socket.data.user || user });
-    });
-
-    socket.on("stopTyping", () => {
-      socket.broadcast.emit("stopTyping", { user: socket.data.user || user });
+      io.emit('alert', payload);
     });
   });
 };

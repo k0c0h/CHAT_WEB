@@ -18,12 +18,12 @@ main {
 
 .register-form {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(233, 247, 238, 0.98)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 243, 238, 0.98)),
     #ffffff;
 }
 
 .register-hero {
-  background: linear-gradient(160deg, var(--green-950), var(--green-700));
+  background: linear-gradient(160deg, var(--alert-950), var(--alert-700));
   color: #ffffff;
 }
 
@@ -59,7 +59,7 @@ main {
 
 .register-form .card-body {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(233, 247, 238, 0.96)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 243, 238, 0.96)),
     #ffffff;
 }
 
@@ -95,8 +95,8 @@ main {
   height: 92px;
   object-fit: cover;
   border-radius: 50%;
-  border: 3px solid var(--green-200);
-  box-shadow: 0 8px 18px rgba(15, 90, 47, 0.12);
+  border: 3px solid var(--alert-200);
+  box-shadow: 0 8px 18px rgba(139, 23, 23, 0.12);
 }
 
 @media (max-width: 991.98px) {

@@ -15,32 +15,66 @@
 <body>
   <header class="site-header shadow-sm">
     <div class="container py-3">
-      <h1 class="h3 mb-0 fw-bold">LiveChat</h1>
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div>
+          <p class="text-uppercase mb-1 header-kicker">ESPE-Alert</p>
+          <h1 class="h3 mb-0 fw-bold">Centro de Control de Emergencias</h1>
+        </div>
+        <div class="header-badge">
+          Emisor: <strong id="emitter-name">Usuario</strong>
+        </div>
+      </div>
     </div>
   </header>
-  <main class="container py-3 py-md-4">
-    <section class="chat-shell card border-0 shadow-lg">
-      <div class="card-body d-flex flex-column gap-3">
-        <div class="chat-title d-flex align-items-center justify-content-between">
+  <main class="container py-3 py-md-4 dashboard-page">
+    <section class="dashboard-grid">
+      <article class="control-panel card border-0 shadow-lg">
+        <div class="card-body p-4 p-md-5 d-flex flex-column gap-4">
           <div>
-            <h2 class="h5 mb-1 fw-bold">Sala de conversación</h2>
+            <p class="panel-eyebrow mb-2">Panel de emisión</p>
+            <h2 class="h3 fw-bold mb-2">Enviar alerta inmediata</h2>
           </div>
+
+          <div class="alert-ribbon">
+            <div>
+              <span class="ribbon-label">Fecha</span>
+              <strong id="dashboard-date"></strong>
+            </div>
+          </div>
+
+          <form class="send-message alert-form" id="alert-form" autocomplete="off">
+            <div class="field-group mb-3">
+              <label for="alert-type" class="form-label fw-semibold text-danger-emphasis">Tipo de alerta</label>
+              <select id="alert-type" class="form-select form-select-lg chat-input">
+                <option value="Crítica">Crítica</option>
+                <option value="Preventiva">Preventiva</option>
+                <option value="Informativa">Informativa</option>
+                <option value="Simulacro">Simulacro</option>
+              </select>
+            </div>
+            <div class="field-group mb-3">
+              <label for="alert-message" class="form-label fw-semibold text-danger-emphasis">Mensaje de emergencia</label>
+              <textarea id="alert-message" class="form-control chat-textarea" rows="4" placeholder="Describe la alerta, ubicación o instrucciones..."></textarea>
+            </div>
+            <div class="d-grid d-sm-flex gap-2">
+              <button id="send-alert" type="submit" class="btn btn-danger btn-send">
+                Emitir alerta
+              </button>
+            </div>
+          </form>
         </div>
-        <div id="chat-date" class="chat-date text-center small fw-semibold"></div>
-        <div id="all-messages" class="messages-list"></div>
-        <div id="typing-indicator" class="typing-indicator text-success-emphasis small d-none" aria-live="polite"></div>
-        <form class="send-message row g-2 align-items-center" id="message-form" autocomplete="off">
-          <div class="col-12 col-md">
-            <input type="text" id="message" class="form-control chat-input" placeholder="Escribe tu mensaje..."
-              aria-label="Mensaje" />
+      </article>
+
+      <article class="alerts-feed card border-0 shadow-lg">
+        <div class="card-body p-4 p-md-5 d-flex flex-column gap-3">
+          <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+            <div>
+              <h2 class="h4 fw-bold mb-0">Alertas recibidas</h2>
+            </div>
           </div>
-          <div class="col-12 col-md-auto">
-            <button id="send-message" type="submit" class="btn btn-success btn-send w-100">
-              Enviar
-            </button>
-          </div>
-        </form>
-      </div>
+          <div id="all-alerts" class="alerts-list" aria-live="polite"></div>
+        </div>
+      </article>
     </section>
   </main>
   <script src="/socket.io/socket.io.js"></script>

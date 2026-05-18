@@ -1,7 +1,7 @@
-module.exports = (req,res,next) => { //parametro next permite dar una accon despues del request y el response, next continua con el proceso de ir al chat 
-    if(req.cookies.username){
-        next();
+module.exports = (req, res, next) => {
+    if (req.cookies.username) {
+        return next(); 
     }else{
-        res.redirect("/register")
+    return res.redirect('/register');
     }
 };

@@ -1,119 +1,105 @@
 const socket = io();
 
-const messageForm = document.querySelector("#message-form");
-const messageInput = document.querySelector("#message");
-const allMessages = document.querySelector("#all-messages");
-const typingIndicator = document.querySelector("#typing-indicator");
-const chatDate = document.querySelector("#chat-date");
-const chatUser = localStorage.getItem("chatUser") || "Usuario";
-const chatAvatar = localStorage.getItem("chatAvatar") || "/img/anonimo.png";
+const alertForm = document.querySelector("#alert-form");
+const alertMessageInput = document.querySelector("#alert-message");
+const alertTypeInput = document.querySelector("#alert-type");
+const alertsList = document.querySelector("#all-alerts");
+const dashboardDate = document.querySelector("#dashboard-date");
+const emitterBadge = document.querySelector("#emitter-name");
 
-chatDate.textContent = new Date().toLocaleDateString("es-ES", {
+const getCookieValue = (name) => {
+  const match = document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(`${name}=`));
+
+  if (!match) {
+    return "Usuario";
+  }
+
+  return decodeURIComponent(match.split("=").slice(1).join("="));
+};
+
+const chatUser = getCookieValue("username");
+
+dashboardDate.textContent = new Date().toLocaleDateString("es-ES", {
   weekday: "long",
   day: "numeric",
   month: "long",
   year: "numeric",
 });
 
+emitterBadge.textContent = chatUser;
+
 socket.emit("registerUser", {
   user: chatUser,
-  avatar: chatAvatar,
 });
 
-// render helper
-const appendMessage = ({ user, avatar, message, date }) => {
-  const msg = document.createRange().createContextualFragment(`
-    <div class="message">
-      <div class="image-container">
-        <img src="${avatar || '/img/anonimo.png'}" alt="Avatar de ${user}" />
-      </div>
-      <div class="message-body">
-        <div class="user-info">
-          <span class="username">${user}</span>
-          <span class="time">${date}</span>
-          <p>
-            ${message}
-          </p>
-        </div>
-      </div>
-    </div>
-  `);
-  allMessages.append(msg);
+const appendAlert = ({ user, alertType, message, date }) => {
+  const card = document.createElement("article");
+  card.className = "alert-item";
+
+  const header = document.createElement("div");
+  header.className = "alert-item__header";
+
+  const userLabel = document.createElement("span");
+  userLabel.className = "alert-item__user";
+  userLabel.textContent = user;
+
+  const typeLabel = document.createElement("span");
+  typeLabel.className = `alert-chip alert-chip--${String(alertType || "general").toLowerCase()}`;
+  typeLabel.textContent = alertType || "General";
+
+  const timeLabel = document.createElement("span");
+  timeLabel.className = "alert-item__time";
+  timeLabel.textContent = date;
+
+  const body = document.createElement("p");
+  body.className = "alert-item__message";
+  body.textContent = message;
+
+  header.append(userLabel, typeLabel, timeLabel);
+  card.append(header, body);
+  alertsList.prepend(card);
 };
 
-const typingUsers = new Set();
-let typingTimeoutId;
-
-const renderTypingIndicator = () => {
-  if (typingUsers.size === 0) {
-    typingIndicator.textContent = "";
-    typingIndicator.classList.add("d-none");
-    return;
-  }
-
-  const users = Array.from(typingUsers);
-  const label =
-    users.length === 1
-      ? `${users[0]} está escribiendo...`
-      : `${users.slice(0, 2).join(" y ")} están escribiendo...`;
-
-  typingIndicator.textContent = label;
-  typingIndicator.classList.remove("d-none");
-};
-
-const emitTyping = () => {
-  socket.emit("typing");
-
-  clearTimeout(typingTimeoutId);
-  typingTimeoutId = setTimeout(() => {
-    socket.emit("stopTyping");
-  }, 900);
-};
-
-messageForm.addEventListener("submit", (event) => {
+alertForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  const message = messageInput.value.trim();
-  if (message === "") {
-    messageInput.focus();
+  const alertMessage = alertMessageInput.value.trim();
+
+  if (alertMessage === "") {
+    alertMessageInput.focus();
     return;
   }
 
-  socket.emit("message", message);
-  socket.emit("stopTyping");
-  messageInput.value = "";
-  messageInput.focus();
+  socket.emit("alert", {
+    alertType: alertTypeInput.value,
+    message: alertMessage,
+  });
+
+  alertMessageInput.value = "";
+  alertMessageInput.focus();
 });
 
-messageInput.addEventListener("input", () => {
-  if (messageInput.value.trim() === "") {
-    clearTimeout(typingTimeoutId);
-    socket.emit("stopTyping");
-    return;
+socket.on("alert", ({ user, alertType, message, date }) => { 
+  appendAlert({ user, alertType, message, date });
+});
+
+socket.on("history", (alerts) => {
+  alerts.forEach((item) => appendAlert(item));
+});
+
+alertMessageInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    alertForm.requestSubmit();
   }
-
-  emitTyping();
 });
 
-messageInput.addEventListener("blur", () => {
-  clearTimeout(typingTimeoutId);
-  socket.emit("stopTyping");
-});
-
-socket.on("message", ({ user, avatar, message, date }) => {
-  appendMessage({ user, avatar, message, date });
-});
-
-socket.on('history', (messages) => {
-  messages.forEach((m) => appendMessage(m));
-});
-
-socket.on("typing", ({ user }) => {
-  typingUsers.add(user);
-  renderTypingIndicator();
-});
-
-socket.on("stopTyping", ({ user }) => {
-  typingUsers.delete(user);
-  renderTypingIndicator();
+document.querySelectorAll("[data-alert-type]").forEach((button) => {
+  button.addEventListener("click", () => {
+    alertTypeInput.value = button.dataset.alertType;
+    alertMessageInput.focus();
+  });
 });

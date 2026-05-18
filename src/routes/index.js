@@ -9,6 +9,10 @@ router.get("/", isLoggedIn, (req, res) => { //se hace la peticion al servidor y 
 });
 
 router.get("/register", (req, res) => {
+  if (req.cookies.username) {
+    return res.redirect("/");
+  }
+
   res.sendFile(views + "/register.html");
 });
 

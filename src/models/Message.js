@@ -3,7 +3,7 @@ const { Schema, model } = require('mongoose');
 const MessageSchema = new Schema(
   {
     user: { type: String, required: true },
-    avatar: { type: String, default: '/img/anonimo.png' },
+    alertType: { type: String, required: true },
     message: { type: String, required: true },
     date: { type: String },
   },
