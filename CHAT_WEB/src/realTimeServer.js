@@ -3,7 +3,7 @@ module.exports = (httpServer) => {
   const io = new Server(httpServer);
   const Message = require('./models/Message');
 
-  const getUserFromCookie = (cookieHeader = "") => {
+  const getUsernameFromCookie = (cookieHeader = "") => {
     const cookie = cookieHeader
       .split(";")
       .map((item) => item.trim())
@@ -12,34 +12,36 @@ module.exports = (httpServer) => {
     return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "Usuario";
   };
 
+  const formatMessage = (messageDocument) => ({
+    user: messageDocument.user,
+    avatar: messageDocument.avatar,
+    alertType: messageDocument.alertType || 'General',
+    message: messageDocument.message,
+    date: messageDocument.date || messageDocument.createdAt.toLocaleTimeString(),
+  });
+
   io.on("connection", (socket) => {
-    const user = getUserFromCookie(socket.request.headers.cookie);
+    const username = getUsernameFromCookie(socket.request.headers.cookie);
 
     Message.find()
       .sort({ createdAt: -1 })
       .limit(50)
       .then((messages) => {
-        const ordered = messages.reverse();
-        socket.emit('history', ordered.map((m) => ({
-          user: m.user,
-          avatar: m.avatar,
-          alertType: m.alertType || 'General',
-          message: m.message,
-          date: m.date || m.createdAt.toLocaleTimeString(),
-        })));
+        const messagesInChronologicalOrder = messages.reverse();
+        socket.emit('history', messagesInChronologicalOrder.map(formatMessage));
       })
       .catch((err) => {
         console.error('Error fetching history:', err && err.message);
       });
 
-    socket.on("registerUser", ({ user: registeredUser, avatar }) => {
-      socket.data.user = registeredUser || user;
+    socket.on("registerUser", ({ user: registeredUsername, avatar }) => {
+      socket.data.user = registeredUsername || username;
       socket.data.avatar = avatar || "/img/anonimo.png";
     });
 
     socket.on("message", (message) => {
       const payload = {
-        user: socket.data.user || user,
+        user: socket.data.user || username,
         avatar: socket.data.avatar || '/img/anonimo.png',
         message,
         date: new Date().toLocaleTimeString(),
@@ -57,11 +59,11 @@ module.exports = (httpServer) => {
     });
 
     socket.on("typing", () => {
-      socket.broadcast.emit("typing", { user: socket.data.user || user });
+      socket.broadcast.emit("typing", { user: socket.data.user || username });
     });
 
     socket.on("stopTyping", () => {
-      socket.broadcast.emit("stopTyping", { user: socket.data.user || user });
+      socket.broadcast.emit("stopTyping", { user: socket.data.user || username });
     });
   });
 };

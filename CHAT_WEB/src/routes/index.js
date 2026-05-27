@@ -1,15 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const path = require("path");
-const isLoggedIn = require("../middleware/isLoggedIn")
-const views = path.join(__dirname, "/../views");
+const validateAuthenticatedSession = require("../middleware/isLoggedIn");
+const viewsPath = path.join(__dirname, "/../views");
 
-router.get("/", isLoggedIn, (req, res) => { //se hace la peticion al servidor y se hace isLoggedIn
-  res.sendFile(views + "/index.html");
+router.get("/", validateAuthenticatedSession, (request, response) => {
+  response.sendFile(viewsPath + "/index.html");
 });
 
-router.get("/register", (req, res) => {
-  res.sendFile(views + "/register.html");
+router.get("/register", (request, response) => {
+  response.sendFile(viewsPath + "/register.html");
 });
 
 module.exports = router;

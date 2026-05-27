@@ -1,10 +1,10 @@
-const login = document.querySelector("#form");
+const registerForm = document.querySelector("#form");
 const usernameInput = document.querySelector("#username");
 const avatarInput = document.querySelector("#avatar");
-const avatarPreviewWrap = document.querySelector("#avatar-preview-wrap");
+const avatarPreviewContainer = document.querySelector("#avatar-preview-wrap");
 const avatarPreview = document.querySelector("#avatar-preview");
 
-const readFileAsDataUrl = (file) =>
+const fileToDataUrl = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -16,23 +16,23 @@ avatarInput.addEventListener("change", async () => {
   const [file] = avatarInput.files;
 
   if (!file) {
-    avatarPreviewWrap.classList.add("d-none");
+    avatarPreviewContainer.classList.add("d-none");
     avatarPreview.removeAttribute("src");
     return;
   }
 
-  const previewUrl = await readFileAsDataUrl(file);
+  const previewUrl = await fileToDataUrl(file);
   avatarPreview.src = previewUrl;
-  avatarPreviewWrap.classList.remove("d-none");
+  avatarPreviewContainer.classList.remove("d-none");
 });
 
-login.addEventListener("submit", async (e) => {
-  e.preventDefault();
+registerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-  const user = usernameInput.value.trim();
+  const username = usernameInput.value.trim();
   const avatarFile = avatarInput.files[0];
 
-  if (user === "") {
+  if (username === "") {
     alert("Ingresa tu nombre para continuar");
     usernameInput.focus();
     return;
@@ -44,10 +44,10 @@ login.addEventListener("submit", async (e) => {
     return;
   }
 
-  const avatarDataUrl = await readFileAsDataUrl(avatarFile);
+  const avatarDataUrl = await fileToDataUrl(avatarFile);
 
-  document.cookie = `username=${encodeURIComponent(user)}`;
-  localStorage.setItem("chatUser", user);
+  document.cookie = `username=${encodeURIComponent(username)}`;
+  localStorage.setItem("chatUser", username);
   localStorage.setItem("chatAvatar", avatarDataUrl);
   document.location.href = "/";
 });

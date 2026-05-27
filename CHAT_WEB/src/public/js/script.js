@@ -1,14 +1,14 @@
 const socket = io();
 
-const messageForm = document.querySelector("#message-form");
-const messageInput = document.querySelector("#message");
-const allMessages = document.querySelector("#all-messages");
+const chatForm = document.querySelector("#message-form");
+const chatInput = document.querySelector("#message");
+const messagesContainer = document.querySelector("#all-messages");
 const typingIndicator = document.querySelector("#typing-indicator");
-const chatDate = document.querySelector("#chat-date");
-const chatUser = localStorage.getItem("chatUser") || "Usuario";
-const chatAvatar = localStorage.getItem("chatAvatar") || "/img/anonimo.png";
+const dateLabel = document.querySelector("#chat-date");
+const storedUsername = localStorage.getItem("chatUser") || "Usuario";
+const storedAvatarUrl = localStorage.getItem("chatAvatar") || "/img/anonimo.png";
 
-chatDate.textContent = new Date().toLocaleDateString("es-ES", {
+dateLabel.textContent = new Date().toLocaleDateString("es-ES", {
   weekday: "long",
   day: "numeric",
   month: "long",
@@ -16,12 +16,12 @@ chatDate.textContent = new Date().toLocaleDateString("es-ES", {
 });
 
 socket.emit("registerUser", {
-  user: chatUser,
-  avatar: chatAvatar,
+  user: storedUsername,
+  avatar: storedAvatarUrl,
 });
 
-const appendMessage = ({ user, avatar, message, date }) => {
-  const msg = document.createRange().createContextualFragment(`
+const renderMessage = ({ user, avatar, message, date }) => {
+  const messageNode = document.createRange().createContextualFragment(`
     <div class="message">
       <div class="image-container">
         <img src="${avatar || '/img/anonimo.png'}" alt="Avatar de ${user}" />
@@ -37,26 +37,26 @@ const appendMessage = ({ user, avatar, message, date }) => {
       </div>
     </div>
   `);
-  allMessages.append(msg);
+  messagesContainer.append(messageNode);
 };
 
-const typingUsers = new Set();
-let typingTimeoutId;
+const usersTyping = new Set();
+let typingTimeoutHandle;
 
 
 const renderTypingIndicator = () => {
-  if (typingUsers.size === 0) {
+  if (usersTyping.size === 0) {
     typingIndicator.textContent = "";
     typingIndicator.classList.add("d-none");
     return;
   }
 
 
-  const users = Array.from(typingUsers);
+  const activeUsers = Array.from(usersTyping);
   const label =
-    users.length === 1
-      ? `${users[0]} está escribiendo...`
-      : `${users.slice(0, 2).join(" y ")} están escribiendo...`;
+    activeUsers.length === 1
+      ? `${activeUsers[0]} está escribiendo...`
+      : `${activeUsers.slice(0, 2).join(" y ")} están escribiendo...`;
 
 
   typingIndicator.textContent = label;
@@ -68,8 +68,8 @@ const renderTypingIndicator = () => {
 const emitTyping = () => {
   socket.emit("typing");
 
-  clearTimeout(typingTimeoutId);
-  typingTimeoutId = setTimeout(() => {
+  clearTimeout(typingTimeoutHandle);
+  typingTimeoutHandle = setTimeout(() => {
     socket.emit("stopTyping");
   }, 900);
 
@@ -77,25 +77,25 @@ const emitTyping = () => {
 
 
 
-messageForm.addEventListener("submit", (event) => {
+chatForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  const message = messageInput.value.trim();
+  const message = chatInput.value.trim();
   if (message === "") {
-    messageInput.focus();
+    chatInput.focus();
     return;
   }
 
   socket.emit("message", message);
   socket.emit("stopTyping");
-  messageInput.value = "";
-  messageInput.focus();
+  chatInput.value = "";
+  chatInput.focus();
 });
 
 
-messageInput.addEventListener("input", () => {
-  if (messageInput.value.trim() === "") {
-    clearTimeout(typingTimeoutId);
+chatInput.addEventListener("input", () => {
+  if (chatInput.value.trim() === "") {
+    clearTimeout(typingTimeoutHandle);
     socket.emit("stopTyping");
     return;
   }
@@ -104,27 +104,27 @@ messageInput.addEventListener("input", () => {
 });
 
 
-messageInput.addEventListener("blur", () => {
-  clearTimeout(typingTimeoutId);
+chatInput.addEventListener("blur", () => {
+  clearTimeout(typingTimeoutHandle);
   socket.emit("stopTyping");
 });
 
 
 socket.on("message", ({ user, avatar, message, date }) => {
-  appendMessage({ user, avatar, message, date });
+  renderMessage({ user, avatar, message, date });
 });
 
 
 socket.on('history', (messages) => {
-  messages.forEach((m) => appendMessage(m));
+  messages.forEach((message) => renderMessage(message));
 });
 
 socket.on("typing", ({ user }) => {
-  typingUsers.add(user);
+  usersTyping.add(user);
   renderTypingIndicator();
 });
 
 socket.on("stopTyping", ({ user }) => {
-  typingUsers.delete(user);
+  usersTyping.delete(user);
   renderTypingIndicator();
 });
