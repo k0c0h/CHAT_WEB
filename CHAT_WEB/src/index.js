@@ -1,5 +1,5 @@
+//inicializo sentry antes que express
 require('./instrument');
-
 const express = require('express');
 const {createServer } = require('http');
 const Sentry = require("@sentry/node")
