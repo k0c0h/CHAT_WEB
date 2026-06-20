@@ -2,6 +2,8 @@ module.exports = (request, response, next) => {
     if (request.cookies.username) {
         next();
     } else {
-        response.redirect("/register");
+        return response.status(401).json({
+            error: "Usuario no autenticado"
+        });
     }
 };
