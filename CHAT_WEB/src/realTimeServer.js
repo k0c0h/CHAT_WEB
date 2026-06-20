@@ -1,5 +1,6 @@
 module.exports = (httpServer) => {
   const { Server } = require("socket.io");
+  const Sentry = require("@sentry/node");
   const io = new Server(httpServer);
   const Message = require('./models/Message');
 
@@ -9,7 +10,7 @@ module.exports = (httpServer) => {
       .map((item) => item.trim())
       .find((item) => item.startsWith("username="));
 
-    return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "Usuario";
+    return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : null;
   };
 
   const formatMessage = (messageDocument) => ({
@@ -22,6 +23,13 @@ module.exports = (httpServer) => {
 
   io.on("connection", (socket) => {
     const username = getUsernameFromCookie(socket.request.headers.cookie);
+    if (!username) {
+      const error = new Error("Conexion sin cookie de username. Asegúrate de que el cliente envíe la cookie correctamente.");
+      Sentry.captureException(error, {
+        tags: { source: "socket.io", event: "error" },
+        extra: { socketID: socket.id },
+      });
+    }
 
     Message.find()
       .sort({ createdAt: -1 })
@@ -53,7 +61,13 @@ module.exports = (httpServer) => {
         alertType: payload.alertType,
         message: payload.message,
         date: payload.date,
-      }).catch((err) => console.error('Persist message error:', err && err.message));
+      }).catch((err) => {
+        Sentry.captureException(err, {
+          tags: { source: "socket.io", event: "message" },
+          extra: { socketID: socket.id },
+        });
+        console.error('Persist message error:', err && err.message);
+      });
 
       io.emit('message', payload);
     });

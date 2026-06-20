@@ -70,6 +70,17 @@
       </div>
     </div>
   </main>
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        dsn: "https://07f193f6241e12f6ae4082d8eb7cfd24@o4511580690448384.ingest.us.sentry.io/4511580757688320",
+        environment: "production",
+        release: "chat_web@1.0.0",
+        tracesSampleRate: 0,
+      });
+    };
+  </script>
+  <script src="https://js.sentry-cdn.com/07f193f6241e12f6ae4082d8eb7cfd24.min.js" crossorigin="anonymous"></script>
   <script src="js/register.js"></script>
 </body>
 
