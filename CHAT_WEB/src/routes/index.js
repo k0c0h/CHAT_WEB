@@ -42,4 +42,15 @@ router.get("/v1/service-beta/private", async (req, res) => {
   }
 });
 
+router.get("/v1/service-beta/protected", (req, res) => {
+
+  const autorizado = false;
+
+  if (!autorizado) {
+    return res.status(401).json({
+      error: "Token invalido o expirado"
+    });
+  }
+
+});
 module.exports = router;
