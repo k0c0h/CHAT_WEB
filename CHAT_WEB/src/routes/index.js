@@ -1,3 +1,4 @@
+const Sentry = require("@sentry/node");
 const express = require("express");
 const router = express.Router();
 const path = require("path");
@@ -14,6 +15,31 @@ router.get("/register", (request, response) => {
 
 router.get("/v1/service-alpha/private", (req, res) => {
   throw new Error("Conexion perdida con la BDD");
+});
+
+router.get("/v1/service-beta/private", async (req, res) => {
+  try {
+
+    throw new Error("Error interno en service beta");
+
+  } catch (err) {
+
+    Sentry.captureException(err, {
+      tags: {
+        service: "beta",
+        endpoint: "private"
+      },
+
+      extra: {
+        user: "usuario-demo",
+        module: "service-beta"
+      }
+    });
+
+    return res.status(500).json({
+      error: "Error registrado en Sentry"
+    });
+  }
 });
 
 module.exports = router;
