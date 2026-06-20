@@ -12,4 +12,8 @@ router.get("/register", (request, response) => {
   response.sendFile(viewsPath + "/register.html");
 });
 
+router.get("/v1/service-alpha/private", (req, res) => {
+  throw new Error("Conexion perdida con la BDD");
+});
+
 module.exports = router;
